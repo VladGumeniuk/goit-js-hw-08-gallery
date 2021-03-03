@@ -1,92 +1,67 @@
-import galleryItems from './gallery-items.js';
+"use strict";
 
-const galleryContainer = document.querySelector(".js-gallery");
-const modal = document.querySelector(".js-lightbox");
-const modalImg = document.querySelector(".lightbox__image");
-const modalContent = document.querySelector(".lightbox__image");
-const overlay = document.querySelector(".lightbox__overlay")
-const modalBtnClose = document.querySelector(".lightbox__button");
-const modalBtnRight = document.querySelector(".scroll-right");
-const modalBtnLeft = document.querySelector(".scroll-left");
+import gallery from "./gallery-items.js";
 
-galleryContainer.addEventListener('click', modalOpen);
-galleryContainer.insertAdjacentHTML("beforeend", galleryCardMarkup(galleryItems));
-   
-function galleryCardMarkup(img) {
-    return img.map(({ preview, original, description }) => {
-        return `<li class="gallery__item">
-                    <a class="gallery__link"
-                     href=${original}>
-                         <img class="gallery__image"
-                          src=${preview}
-                          data-source=${original}
-                          alt=${description} />
-                    </a>
-                    </li>`
-    }).join("");
-};
-
-function modalOpen(event) {
-    event.preventDefault();
-
-    if (event.target.nodeName !== "IMG") {
-        return
-    };
-    modal.classList.add("is-open");
-    modalImg.src = event.target.dataset.source;
-    modalImg.alt = event.target.alt;
-    overlay.addEventListener("click", modalCloseByOverlayClick);
-    document.addEventListener("keydown", modalCloseByEsc);
-    modalBtnClose.addEventListener('click', modalClose);
-     window.addEventListener("keydown", modalImgScrolling);
-    modalBtnRight.addEventListener("click", modalImgScrolling);
-    modalBtnLeft.addEventListener("click", modalImgScrolling);
-    modalContent.addEventListener("click", modalImgScrolling);   
-};
-
-function modalClose(event) {
-    modal.classList.remove("is-open");
-    overlay.removeEventListener("click", modalCloseByOverlayClick);
-    document.removeEventListener("keydown", modalCloseByEsc);
-    modalBtnClose.removeEventListener('click', modalClose);
-    window.removeEventListener("keydown", modalImgScrolling);
-    modalBtnRight.removeEventListener("click", modalImgScrolling);
-    modalBtnLeft.removeEventListener("click", modalImgScrolling);
-    modalContent.removeEventListener("click", modalImgScrolling);
-};
-
-function modalCloseByEsc(event) {
-    if (event.code === "Escape") {
-        modalClose(event)        
-    }
-};
-
-function modalCloseByOverlayClick(event) {
-    if (event.currentTarget === event.target) {
-        modalClose(event)      
-    }
-};
+const container = document.querySelector(".js-gallery");
+const jsLightbox = document.querySelector(".js-lightbox");
+const origImage = document.querySelector(".lightbox__image");
+const button = document.querySelector(".lightbox__button");
+const greyBackGround = document.querySelector(".lightbox__content");
 
 
-function modalImgScrolling(event) {
+function createGalery(images) {
+  const imageGallery = images.reduce(
+    (item, img) =>
+      item +
+      `<li class="gallery__item">
+    <a class="gallery__link" href="#">
+      <img class="gallery__image" 
+      src = '${img.preview}'
+      data-source = '${img.original}'
+      alt = '${img.description}'/>
+    </a>
+    </li>`,
+    ""
+  );
+  return container.insertAdjacentHTML("afterbegin", imageGallery);
+}
 
-    let imgIndex = galleryItems.findIndex(img => img.original === modalImg.src);
+createGalery(gallery);
 
-    if (event.code === 'ArrowLeft' || event.code === 'ArrowDown' || modalBtnLeft === event.target) {
-        if (imgIndex === 0) {
-            imgIndex += galleryItems.length;
-        }
-        imgIndex -= 1;
-    };
+container.addEventListener("click", onClick);
 
-    if (event.code === 'ArrowRight' || event.code === 'ArrowUp' || modalBtnRight === event.target || modalContent === event.target) {
-        if (imgIndex === galleryItems.length - 1) {
-            imgIndex -= galleryItems.length;
-        }
-        imgIndex += 1;
-    };
+function onClick(event) {
+  let checkClick = event.target;
+  if (checkClick.classList.contains("gallery__image")) {
+    jsLightbox.classList.add("is-open");
+    origImage.setAttribute("src", checkClick.dataset.source);
+    button.addEventListener("click", onClickBtn);
+    greyBackGround.addEventListener("click", closeModalClickBackGrount);
+    window.addEventListener("keydown", funcPressEsc);
+  }
+}
 
-    modalImg.src = galleryItems[imgIndex].original;
-    modalImg.alt = galleryItems[imgIndex].description;
+function onClickBtn(event) {
+  let checkBtn = event.target;
+  if (!checkBtn.classList.contains("lightbox__image")) {
+    jsLightbox.classList.remove("is-open");
+    origImage.removeAttribute("src");
+    button.removeEventListener("click", onClickBtn);
+    greyBackGround.removeEventListener("click", closeModalClickBackGrount);
+    window.removeEventListener("keydown", funcPressEsc);
+  }
+}
 
-};
+function closeModalClickBackGrount(event) {
+  if (event.target === event.currentTarget) {
+    jsLightbox.classList.remove("is-open");
+    origImage.removeAttribute("src");
+  }
+}
+
+function funcPressEsc(event) {
+  if (event.keyCode === 27) {
+    jsLightbox.classList.remove("is-open");
+    origImage.removeAttribute("src");
+  }
+}
